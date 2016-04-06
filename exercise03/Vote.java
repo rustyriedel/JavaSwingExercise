@@ -2,7 +2,8 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.Component;
 import java.awt.GridLayout;
-import java.io.File;
+import java.io.*;
+import java.util.*;
 
 public class Vote 
 {
@@ -13,6 +14,7 @@ public class Vote
     private JTextField lastName;
     private JLabel firstNameLabel;
     private JLabel lastNameLabel;
+    private JLabel warning;
     private JRadioButton can1;
     private JRadioButton can2;
     private JRadioButton can3;
@@ -31,17 +33,26 @@ public class Vote
         //initialize the labels
         firstNameLabel = new JLabel("FirstName");
         lastNameLabel = new JLabel("LastName");
+        warning = new JLabel("");
         
-        //initialize the radio buttons and add to button group
-        JRadioButton can1 = new JRadioButton("can1");
-        JRadioButton can2 = new JRadioButton("can2");
-        JRadioButton can3 = new JRadioButton("can3");
-        JRadioButton can4 = new JRadioButton("can4");
-        ButtonGroup group = new ButtonGroup();
-        group.add(can1);
-        group.add(can2);
-        group.add(can3);
-        group.add(can4);
+        //Set up radio buttons for candidate selection
+        //I used code from this site as an example for the radio buttons
+        //http://www.java2s.com/Code/Java/Swing-JFC/GetselectedbuttonfromButtonGroup.htm
+        JPanel radioPanel = new JPanel();
+        group = new ButtonGroup();
+        JRadioButton radioButton;
+        radioPanel.add(radioButton = new JRadioButton("Can1", true));
+        radioButton.setActionCommand("Can1");
+        group.add(radioButton);
+        radioPanel.add(radioButton = new JRadioButton("Can2"));
+        radioButton.setActionCommand("Can2");
+        group.add(radioButton);
+        radioPanel.add(radioButton = new JRadioButton("Can3"));
+        radioButton.setActionCommand("Can3");
+        group.add(radioButton);
+        radioPanel.add(radioButton = new JRadioButton("Can4"));
+        radioButton.setActionCommand("Can4");
+        group.add(radioButton);
         
         //Load the listener
         button.addActionListener(buttonListener()); 
@@ -51,18 +62,16 @@ public class Vote
         panel.add(firstName);
         panel.add(lastNameLabel);
         panel.add(lastName);
-        panel.add(can1);
-        panel.add(can2);
-        panel.add(can3);
-        panel.add(can4);
+        panel.add(radioPanel);
         panel.add(button);
+        panel.add(warning);
     }
     
     public Component getContent()
     {
         return (panel);
     }
-
+    
     private ActionListener buttonListener()
     {
         ActionListener listener = new ActionListener()
@@ -72,27 +81,37 @@ public class Vote
                 //get the input from the text boxes
                 String fInput = firstName.getText();
                 String lInput = lastName.getText();
+
+                //create the filename string from the user first and last name inputs
+                String fileName = "" + lInput + "_" + fInput + "_ballot.txt";
                 
-                if(can1.isSelected() == true){
-                    lastName.setText("can1");
-                }
+                //determine which candidate was selected and set content string to write to the file
+                String content = group.getSelection().getActionCommand();
                 
-                //create a filename from the users inputs
-                String filepath = "C:/" + lInput + "_" + fInput + "_ballot.txt";
+                //create a new filepath
+                File filePath = new File(fileName);
                 
                 //check if the file exists already, if so display that the user already voted
-                //I borrowed this code from a stack overflow thread.
-                //http://stackoverflow.com/questions/1816673/how-do-i-check-if-a-file-exists-in-java
-                File f = new File(filepath);
-                if(f.isFile()) { 
-                    firstName.setText("Already Exists");
-                }else{
-                    //f.createNewFile();
+                if(filePath.exists()){
+                    //display to user that they already voted
+                    warning.setText("Already voted!");
                 }
-                
+                else{//make a new file and write your candidate as the content
+                    //remove warning string
+                    warning.setText("");
+                    
+                    //open and write to the new file.
+                    try{
+                        OutputStream outStream = new FileOutputStream(filePath);
+                        outStream.write(content.getBytes());
+                        outStream.close();
+                    }
+                    catch(Exception m){
+                        warning.setText("could not create file");
+                    }
+                    
+                }
                
-                
-  
             }
         };
         
